@@ -12,7 +12,6 @@ namespace OrdersApp.Application.Common.Interfaces
             CancellationToken cancellationToken = default);
         Task<List<Order>> GetAllAsync(CancellationToken cancellationToken = default);
         Task<Order?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
-        Task RemoveOrderAsync(Order order, CancellationToken cancellationToken = default);
         Task UpdateAsync(Order order, CancellationToken cancellationToken = default);
     }
 }

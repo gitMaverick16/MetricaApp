@@ -31,7 +31,7 @@ namespace OrdersApp.Infrastructure.Orders.Persistence
 
         public async Task<bool> ExistsByNumeroPedidoAsync(string numeroPedido, CancellationToken cancellationToken = default)
         {
-            return await _dbContext.Orders.AnyAsync(
+            return await _dbContext.Orders.IgnoreQueryFilters().AnyAsync(
                 o => o.NumeroPedido == numeroPedido,
                 cancellationToken);
         }
@@ -41,7 +41,7 @@ namespace OrdersApp.Infrastructure.Orders.Persistence
             int excludeOrderId,
             CancellationToken cancellationToken = default)
         {
-            return await _dbContext.Orders.AnyAsync(
+            return await _dbContext.Orders.IgnoreQueryFilters().AnyAsync(
                 o => o.NumeroPedido == numeroPedido && o.Id != excludeOrderId,
                 cancellationToken);
         }
@@ -54,12 +54,6 @@ namespace OrdersApp.Infrastructure.Orders.Persistence
         public async Task<Order?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             return await _dbContext.Orders.FirstOrDefaultAsync(order => order.Id == id, cancellationToken);
-        }
-
-        public async Task RemoveOrderAsync(Order order, CancellationToken cancellationToken = default)
-        {
-            _dbContext.Remove(order);
-            await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
         public async Task UpdateAsync(Order order, CancellationToken cancellationToken = default)

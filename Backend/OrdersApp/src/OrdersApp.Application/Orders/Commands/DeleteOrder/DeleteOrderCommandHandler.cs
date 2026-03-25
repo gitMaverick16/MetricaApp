@@ -20,7 +20,8 @@ namespace OrdersApp.Application.Orders.Commands.DeleteOrder
                 return Error.NotFound(description: "Order not found");
             }
 
-            await _ordersRepository.RemoveOrderAsync(order, cancellationToken);
+            order.MarkAsDeleted();
+            await _ordersRepository.UpdateAsync(order, cancellationToken);
             return Result.Deleted;
         }
     }

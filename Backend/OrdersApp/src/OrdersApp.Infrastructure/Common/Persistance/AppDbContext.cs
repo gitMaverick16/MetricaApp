@@ -15,11 +15,13 @@ namespace OrdersApp.Infrastructure.Common.Persistance
         {
             modelBuilder.Entity<Order>(entity =>
             {
+                entity.HasQueryFilter(e => !e.IsDeleted);
                 entity.HasIndex(e => e.NumeroPedido).IsUnique();
                 entity.Property(e => e.NumeroPedido).HasMaxLength(50).IsRequired();
                 entity.Property(e => e.Cliente).HasMaxLength(150).IsRequired();
                 entity.Property(e => e.Estado).HasMaxLength(50).IsRequired();
                 entity.Property(e => e.Total).HasColumnType("decimal(10,2)");
+                entity.Property(e => e.IsDeleted).IsRequired();
             });
         }
     }

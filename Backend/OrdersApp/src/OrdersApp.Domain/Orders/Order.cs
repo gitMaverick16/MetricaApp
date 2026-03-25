@@ -10,6 +10,8 @@ namespace OrdersApp.Domain.Orders
         public string Estado { get; private set; } = null!;
         public decimal Total { get; private set; }
         public DateTime Fecha { get; private set; }
+        public bool IsDeleted { get; private set; }
+        public DateTime? DeletedAt { get; private set; }
 
         private Order()
         {
@@ -33,8 +35,20 @@ namespace OrdersApp.Domain.Orders
                 Cliente = cliente.Trim(),
                 Estado = estado.Trim(),
                 Fecha = fecha,
-                Total = total
+                Total = total,
+                IsDeleted = false
             };
+        }
+
+        public void MarkAsDeleted()
+        {
+            if (IsDeleted)
+            {
+                return;
+            }
+
+            IsDeleted = true;
+            DeletedAt = DateTime.UtcNow;
         }
 
         public void UpdateDetails(
