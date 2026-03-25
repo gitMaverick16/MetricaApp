@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OrdersApp.Application\OrdersApp.Application.csproj" />
+    <ProjectReference Include="..\OrdersApp.Domain\OrdersApp.Domain.csproj" />
     <ProjectReference Include="..\OrdersApp.Infrastructure\OrdersApp.Infrastructure.csproj" />
   </ItemGroup>
 

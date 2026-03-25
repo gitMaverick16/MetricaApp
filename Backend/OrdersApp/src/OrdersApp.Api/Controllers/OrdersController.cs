@@ -1,7 +1,7 @@
 using ErrorOr;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
+using OrdersApp.Api.Common;
 using OrdersApp.Api.Contracts;
 using OrdersApp.Application.Orders.Commands.CreateOrder;
 using OrdersApp.Application.Orders.Commands.DeleteOrder;
@@ -129,13 +129,8 @@ namespace OrdersApp.Api.Controllers
 
         private IActionResult ProblemFromError(Error error)
         {
-            return error.Type switch
-            {
-                ErrorType.Validation => Problem(detail: error.Description, statusCode: 400),
-                ErrorType.Conflict => Problem(detail: error.Description, statusCode: 409),
-                ErrorType.NotFound => Problem(detail: error.Description, statusCode: 404),
-                _ => Problem(detail: error.Description, statusCode: 500)
-            };
+            var (statusCode, detail) = HttpErrorMapper.FromError(error);
+            return Problem(detail: detail, statusCode: statusCode);
         }
     }
 }
