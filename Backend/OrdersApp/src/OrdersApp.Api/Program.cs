@@ -1,7 +1,23 @@
 using OrdersApp.Application;
 using OrdersApp.Infrastructure;
+using Serilog;
+using Serilog.Events;
+using Serilog.Formatting.Compact;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, _, configuration) =>
+{
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+        .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+        .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+        .MinimumLevel.Override("System", LogEventLevel.Warning)
+        .Enrich.FromLogContext()
+        .Enrich.WithProperty("Application", "OrdersApp.Api")
+        .WriteTo.Console(new RenderedCompactJsonFormatter());
+});
 
 ConfigurationManager Configuration = builder.Configuration;
 
@@ -30,10 +46,23 @@ if (app.Environment.IsDevelopment())
 
 app.UseExceptionHandler();
 
+app.UseSerilogRequestLogging(options =>
+{
+    options.MessageTemplate =
+        "HTTP {RequestMethod} {RequestPath} respondió {StatusCode} en {Elapsed:0.0000} ms";
+});
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+try
+{
+    await app.RunAsync();
+}
+finally
+{
+    await Log.CloseAndFlushAsync();
+}

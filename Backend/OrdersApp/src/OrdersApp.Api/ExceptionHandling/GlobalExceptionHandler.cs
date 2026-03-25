@@ -23,11 +23,21 @@ namespace OrdersApp.Api.ExceptionHandling
 
             if (statusCode >= 500)
             {
-                _logger.LogError(exception, "Excepción no controlada");
+                _logger.LogError(
+                    exception,
+                    "Excepción no controlada {ExceptionType} {StatusCode} {RequestPath}",
+                    exception.GetType().Name,
+                    statusCode,
+                    httpContext.Request.Path);
             }
             else
             {
-                _logger.LogWarning(exception, "Excepción de solicitud");
+                _logger.LogWarning(
+                    exception,
+                    "Excepción de solicitud {ExceptionType} {StatusCode} {RequestPath}",
+                    exception.GetType().Name,
+                    statusCode,
+                    httpContext.Request.Path);
             }
 
             await Results
