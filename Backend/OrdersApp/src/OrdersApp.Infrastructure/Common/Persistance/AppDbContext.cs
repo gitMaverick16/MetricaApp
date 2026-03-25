@@ -1,11 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using OrdersApp.Domain.Orders;
+using OrdersApp.Domain.Users;
+using OrdersApp.Infrastructure.Users.Persistence;
 
 namespace OrdersApp.Infrastructure.Common.Persistance
 {
     public class AppDbContext : DbContext
     {
         public DbSet<Order> Orders { get; set; } = null!;
+        public DbSet<User> Users { get; set; } = null!;
 
         public AppDbContext(DbContextOptions options) : base(options)
         {
@@ -13,6 +16,8 @@ namespace OrdersApp.Infrastructure.Common.Persistance
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.ApplyConfiguration(new UserConfiguration());
+
             modelBuilder.Entity<Order>(entity =>
             {
                 entity.HasQueryFilter(e => !e.IsDeleted);

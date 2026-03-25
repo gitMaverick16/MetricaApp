@@ -1,16 +1,19 @@
 using ErrorOr;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OrdersApp.Api.Common;
 using OrdersApp.Api.Contracts;
 using OrdersApp.Application.Orders.Commands.CreateOrder;
 using OrdersApp.Application.Orders.Commands.DeleteOrder;
 using OrdersApp.Application.Orders.Commands.ModifyOrder;
+using OrdersApp.Application.Common.Auth;
 using OrdersApp.Application.Orders.Queries.GetAllOrders;
 using OrdersApp.Application.Orders.Queries.GetOrder;
 
 namespace OrdersApp.Api.Controllers
 {
+    [Authorize(Roles = AppRoles.Admin)]
     [Route("api/pedidos")]
     [ApiController]
     public class OrdersController : ControllerBase

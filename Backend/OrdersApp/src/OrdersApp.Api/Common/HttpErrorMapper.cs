@@ -13,6 +13,7 @@ namespace OrdersApp.Api.Common
                 ErrorType.Validation => (400, error.Description),
                 ErrorType.Conflict => (409, error.Description),
                 ErrorType.NotFound => (404, error.Description),
+                ErrorType.Unauthorized => (401, error.Description),
                 _ => (500, error.Description)
             };
         }
