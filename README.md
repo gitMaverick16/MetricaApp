@@ -187,7 +187,25 @@ Si levantas solo la DB en Docker y ejecutas backend manualmente, la password de 
 
 - Mover secretos sensibles fuera de `appsettings` a `User Secrets`/variables de entorno en todos los entornos.
 - Agregar pruebas de integracion (API + DB) y mas cobertura de casos de aplicacion.
-- Incluir coleccion de Postman/Bruno para pruebas manuales guiadas.
 - Endurecer politicas de resiliencia de DB (retry explicito y timeouts configurados por escenario).
 - Pipeline CI para build, test y analisis estatico.
+
+---
+
+## 10) Coleccion Postman
+
+Se incluye una coleccion lista para importar en:
+
+- `Postman/MetricaApp.postman_collection.json`
+
+### Flujo recomendado de ejecucion
+
+1. `Auth / Login Admin` (guarda automaticamente el token).
+2. `Pedidos (Admin) / GET Pedidos`.
+3. `Pedidos (Admin) / POST Crear Pedido` (guarda `pedidoId` y `numeroPedido`).
+4. `Pedidos (Admin) / GET Pedido por ID`.
+5. `Pedidos (Admin) / PUT Editar Pedido`.
+6. `Pedidos (Admin) / DELETE Pedido`.
+7. `Auth / Login User`.
+8. `Pedidos (Admin) / GET Pedidos` nuevamente (debe devolver `403` con token de User).
 
