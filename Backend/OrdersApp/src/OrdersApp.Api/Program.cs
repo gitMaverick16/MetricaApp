@@ -22,6 +22,39 @@ builder.Host.UseSerilog((context, _, configuration) =>
 
 ConfigurationManager Configuration = builder.Configuration;
 
+const string corsPolicyName = "Frontend";
+
+var corsOrigins = Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? Array.Empty<string>();
+if (corsOrigins.Length == 0 && builder.Environment.IsDevelopment())
+{
+    corsOrigins =
+    [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:4200",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173"
+    ];
+}
+
+if (corsOrigins.Length == 0)
+{
+    throw new InvalidOperationException("Configura Cors:AllowedOrigins en appsettings (origen del frontend).");
+}
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(
+        corsPolicyName,
+        policy =>
+        {
+            policy.WithOrigins(corsOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
+
 // Add services to the container.
 
 builder.Services.AddExceptionHandler<OrdersApp.Api.ExceptionHandling.GlobalExceptionHandler>();
@@ -82,6 +115,8 @@ app.UseSerilogRequestLogging(options =>
 });
 
 app.UseHttpsRedirection();
+
+app.UseCors(corsPolicyName);
 
 app.UseAuthentication();
 app.UseAuthorization();
