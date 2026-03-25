@@ -1,4 +1,4 @@
-﻿using ErrorOr;
+using ErrorOr;
 using MediatR;
 using OrdersApp.Application.Common.Interfaces;
 using OrdersApp.Domain.Orders;
@@ -14,7 +14,7 @@ namespace OrdersApp.Application.Orders.Queries.GetOrder
         }
         public async Task<ErrorOr<Order>> Handle(GetOrderQuery request, CancellationToken cancellationToken)
         {
-            var order = await _ordersRepository.GetByIdAsync(request.Id);
+            var order = await _ordersRepository.GetByIdAsync(request.Id, cancellationToken);
             return order is null
                 ? Error.NotFound(description: "Order not found")
                 : order;

@@ -1,5 +1,7 @@
-﻿using MediatR;
+using ErrorOr;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using OrdersApp.Api.Contracts;
 using OrdersApp.Application.Orders.Commands.CreateOrder;
 using OrdersApp.Application.Orders.Commands.DeleteOrder;
@@ -14,12 +16,13 @@ namespace OrdersApp.Api.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly IMediator _mediator;
+
         public OrdersController(IMediator mediator)
         {
             _mediator = mediator;
         }
 
-        [HttpPost()]
+        [HttpPost]
         public async Task<IActionResult> CreateOrder(CreateOrderRequest request)
         {
             var command = new CreateOrderCommand(
@@ -28,18 +31,20 @@ namespace OrdersApp.Api.Controllers
                 request.Fecha,
                 request.NumeroPedido,
                 request.Total);
-            var createOrderResult = await _mediator.Send(command);
+            var result = await _mediator.Send(command);
 
-            return createOrderResult.MatchFirst(
-                id => Ok(new OrderResponse(
-                    id, 
-                    request.Cliente,
-                    request.Estado,
-                    request.Fecha,
-                    request.NumeroPedido,
-                    request.Total)),
-                error => Problem()
-                );
+            if (result.IsError)
+            {
+                return ProblemFromError(result.FirstError);
+            }
+
+            return Ok(new OrderResponse(
+                result.Value,
+                request.Cliente,
+                request.Estado,
+                request.Fecha,
+                request.NumeroPedido,
+                request.Total));
         }
 
         [HttpDelete("{orderId:int}")]
@@ -49,8 +54,7 @@ namespace OrdersApp.Api.Controllers
             var deleteOrderResult = await _mediator.Send(command);
             return deleteOrderResult.Match<IActionResult>(
                 _ => NoContent(),
-                errors => Problem(errors.FirstOrDefault().Description)
-                );
+                errors => ProblemFromError(errors.FirstOrDefault()));
         }
 
         [HttpPut("{orderId:int}")]
@@ -62,20 +66,23 @@ namespace OrdersApp.Api.Controllers
                 request.Fecha,
                 request.NumeroPedido,
                 orderId,
-                request.Total
-            );
+                request.Total);
 
             var modifyOrderResult = await _mediator.Send(command);
 
-            return modifyOrderResult.MatchFirst(
-                order => Ok(new OrderResponse(
-                    order.Id,
-                    request.Cliente,
-                    request.Estado,
-                    request.Fecha,
-                    request.NumeroPedido,
-                    request.Total)),
-                errors => Problem(errors.Description));
+            if (modifyOrderResult.IsError)
+            {
+                return ProblemFromError(modifyOrderResult.FirstError);
+            }
+
+            var order = modifyOrderResult.Value;
+            return Ok(new OrderResponse(
+                order.Id,
+                order.Cliente,
+                order.Estado,
+                order.Fecha,
+                order.NumeroPedido,
+                order.Total));
         }
 
         [HttpGet("{id:int}")]
@@ -85,15 +92,19 @@ namespace OrdersApp.Api.Controllers
 
             var getOrderResult = await _mediator.Send(query);
 
-            return getOrderResult.MatchFirst(
-                permission => Ok(new OrderResponse(
-                    getOrderResult.Value.Id,
-                    getOrderResult.Value.Cliente,
-                    getOrderResult.Value.Estado,
-                    getOrderResult.Value.Fecha,
-                    getOrderResult.Value.NumeroPedido,
-                    getOrderResult.Value.Total)),
-                error => Problem());
+            if (getOrderResult.IsError)
+            {
+                return ProblemFromError(getOrderResult.FirstError);
+            }
+
+            var order = getOrderResult.Value;
+            return Ok(new OrderResponse(
+                order.Id,
+                order.Cliente,
+                order.Estado,
+                order.Fecha,
+                order.NumeroPedido,
+                order.Total));
         }
 
         [HttpGet]
@@ -113,7 +124,18 @@ namespace OrdersApp.Api.Controllers
                             order.Fecha,
                             order.NumeroPedido,
                             order.Total))),
-                _ => Problem());
+                errors => ProblemFromError(errors.FirstOrDefault()));
+        }
+
+        private IActionResult ProblemFromError(Error error)
+        {
+            return error.Type switch
+            {
+                ErrorType.Validation => Problem(detail: error.Description, statusCode: 400),
+                ErrorType.Conflict => Problem(detail: error.Description, statusCode: 409),
+                ErrorType.NotFound => Problem(detail: error.Description, statusCode: 404),
+                _ => Problem(detail: error.Description, statusCode: 500)
+            };
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using ErrorOr;
+using ErrorOr;
 using MediatR;
 using OrdersApp.Application.Common.Interfaces;
 using OrdersApp.Domain.Orders;
@@ -14,7 +14,7 @@ namespace OrdersApp.Application.Orders.Queries.GetAllOrders
         }
         public async Task<ErrorOr<List<Order>>> Handle(GetAllOrdersQuery request, CancellationToken cancellationToken)
         {
-            var orders = await _ordersRepository.GetAllAsync();
+            var orders = await _ordersRepository.GetAllAsync(cancellationToken);
             return orders;
         }
     }

@@ -1,6 +1,8 @@
-﻿using ErrorOr;
+using ErrorOr;
 using MediatR;
+using OrdersApp.Application.Common.Exceptions;
 using OrdersApp.Application.Common.Interfaces;
+using OrdersApp.Domain.Common;
 using OrdersApp.Domain.Orders;
 
 namespace OrdersApp.Application.Orders.Commands.CreateOrder
@@ -8,30 +10,46 @@ namespace OrdersApp.Application.Orders.Commands.CreateOrder
     public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, ErrorOr<int>>
     {
         private readonly IOrdersRepository _ordersRepository;
-        //private readonly IUnitOfWork _unitOfWork;
-        public CreateOrderCommandHandler(
-            IOrdersRepository ordersRepository)
-            //IUnitOfWork unitOfWork)
+
+        public CreateOrderCommandHandler(IOrdersRepository ordersRepository)
         {
             _ordersRepository = ordersRepository;
-            //_unitOfWork = unitOfWork;
         }
+
         public async Task<ErrorOr<int>> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
         {
-            var order = new Order
+            var numeroPedido = request.NumeroPedido.Trim();
+
+            if (await _ordersRepository.ExistsByNumeroPedidoAsync(numeroPedido, cancellationToken))
             {
-                Cliente = request.Cliente,
-                Estado = request.Estado,
-                Fecha = request.Fecha,
-                NumeroPedido = request.NumeroPedido,
-                Total = request.Total
-            };
+                return Error.Conflict(description: "Ya existe un pedido con ese número.");
+            }
 
-            await _ordersRepository.AddOrderAsync(order);
+            Order order;
+            try
+            {
+                order = Order.Create(
+                    numeroPedido,
+                    request.Cliente,
+                    request.Estado,
+                    request.Fecha,
+                    request.Total);
+            }
+            catch (OrderDomainException ex)
+            {
+                return Error.Validation(description: ex.Message);
+            }
 
-            //await _unitOfWork.CommitChangesAsync();
+            try
+            {
+                await _ordersRepository.AddOrderAsync(order, cancellationToken);
+            }
+            catch (DuplicateNumeroPedidoException)
+            {
+                return Error.Conflict(description: "Ya existe un pedido con ese número.");
+            }
 
-            return 1;
+            return order.Id;
         }
     }
 }

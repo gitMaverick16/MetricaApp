@@ -1,7 +1,6 @@
-﻿using ErrorOr;
+using ErrorOr;
 using MediatR;
 using OrdersApp.Application.Common.Interfaces;
-using System.Security;
 
 namespace OrdersApp.Application.Orders.Commands.DeleteOrder
 {
@@ -14,14 +13,14 @@ namespace OrdersApp.Application.Orders.Commands.DeleteOrder
         }
         public async Task<ErrorOr<Deleted>> Handle(DeleteOrderCommand command, CancellationToken cancellationToken)
         {
-            var order = await _ordersRepository.GetByIdAsync(command.Id);
+            var order = await _ordersRepository.GetByIdAsync(command.Id, cancellationToken);
 
             if (order is null)
             {
                 return Error.NotFound(description: "Order not found");
             }
 
-            await _ordersRepository.RemoveOrderAsync(order);
+            await _ordersRepository.RemoveOrderAsync(order, cancellationToken);
             return Result.Deleted;
         }
     }
